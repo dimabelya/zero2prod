@@ -50,7 +50,7 @@ then
     done
     
     # Create the application user (what our rust code will use)
-    # note: might want to remove '-t' is if no tty environment.
+    # note: might want to remove '-t' if no tty environment.
     CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
     docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${CREATE_QUERY}"
     
