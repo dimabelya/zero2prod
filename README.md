@@ -57,7 +57,7 @@ cargo test
 **Check a specific endpoint manually:**
 
 ```bash
-curl f -v http://127.0.0.1:8000/health_check
+curl -v http://127.0.0.1:8000/health_check
 
 curl -X POST http://127.0.0.1:8000/subscriptions \
   -H "Content-Type: application/x-www-form-urlencoded" \
