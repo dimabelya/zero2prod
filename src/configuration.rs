@@ -1,5 +1,3 @@
-use std::u16;
-
 #[derive(serde::Deserialize)]
 pub struct Settings {
     pub database: DatabaseSettings,
