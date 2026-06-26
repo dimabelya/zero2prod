@@ -11,7 +11,6 @@ if ! [ -x "$(command -v sqlx)" ]; then
     exit 1
 fi
 
-
 # Check if a custom parameter has been set, else use default values
 # everything is overridable w/o editing the script.
 DB_PORT="${POSTGRES_PORT:=5432}"
@@ -23,18 +22,9 @@ SUPERUSER_PWD="${SUPERUSER_PWD:=password}"
 APP_USER="${APP_USER:=app}"
 APP_USER_PWD="${APP_USER_PWD:=secret}"
 
-
 # Allow to skip Docker if a dockerized Postgres db is alredy running
 if [[ -z "${SKIP_DOCKER}" ]]
 then
-  ANY_POSTGRES_CONTAINER=$(docker ps -a --filter 'name=postgres' --format '{{.ID}}')
-  if [[ -n $ANY_POSTGRES_CONTAINER ]]; then
-      # Used to print instructions to rm..
-      # DELETES ANY POSTGRES CONTAINERS
-      # replace in the future.
-    docker rm -f "${ANY_POSTGRES_CONTAINER}"
-  fi
-
     # Launch postress using Docker, check if postgres is ready.
     CONTAINER_NAME="postgres"
     docker run \
@@ -60,7 +50,7 @@ then
     done
     
     # Create the application user (what our rust code will use)
-    # note: might want to remove '-t' is no tty environment.
+    # note: might want to remove '-t' is if no tty environment.
     CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
     docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${CREATE_QUERY}"
     
