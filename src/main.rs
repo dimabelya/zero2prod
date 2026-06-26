@@ -1,5 +1,4 @@
 use std::net::TcpListener;
-
 use zero2prod::startup::run;
 
 #[tokio::main]
