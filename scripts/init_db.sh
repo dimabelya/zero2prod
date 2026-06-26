@@ -2,31 +2,37 @@
 set -x
 set -eo pipefail
 
-# Check that sqlx-cli is installed
+# Check that sqlx-cli is installed/executble, else write to stderr.
 if ! [ -x "$(command -v sqlx)" ]; then
     echo >&2 "Error: sqlx is not installed."
     echo >&2 "Use:"
-    echo >&2 "    cargo install --version='~0.8' sqlx-cli \
---no-default-features --features rustls, postgres"
+    echo >&2 "    cargo install --version='~0.8' sqlx-cli --no-default-features --features rustls, postgres"
     echo >&2 "to install it."
     exit 1
 fi
 
+
 # Check if a custom parameter has been set, else use default values
+# everything is overridable w/o editing the script.
 DB_PORT="${POSTGRES_PORT:=5432}"
+APP_DB_NAME="${APP_DB_NAME:=newsletter}"
+
 SUPERUSER="${SUPERUSER:=postgres}"
 SUPERUSER_PWD="${SUPERUSER_PWD:=password}"
+
 APP_USER="${APP_USER:=app}"
 APP_USER_PWD="${APP_USER_PWD:=secret}"
-APP_DB_NAME="${APP_DB_NAME:=newsletter}"
+
 
 # Allow to skip Docker if a dockerized Postgres db is alredy running
 if [[ -z "${SKIP_DOCKER}" ]]
 then
-  RUNNING_POSTGRES_CONTAINER=$(docker ps --filter 'name=postgres' --format '{{.ID}}')
-
-  if [[ -n $RUNNING_POSTGRES_CONTAINER ]]; then
-    docker rm -f "${RUNNING_POSTGRES_CONTAINER}"
+  ANY_POSTGRES_CONTAINER=$(docker ps -a --filter 'name=postgres' --format '{{.ID}}')
+  if [[ -n $ANY_POSTGRES_CONTAINER ]]; then
+      # Used to print instructions to rm..
+      # DELETES ANY POSTGRES CONTAINERS
+      # replace in the future.
+    docker rm -f "${ANY_POSTGRES_CONTAINER}"
   fi
 
     # Launch postress using Docker, check if postgres is ready.
@@ -46,14 +52,15 @@ then
 
     # Wait for Postgres to be ready to accept connections
     until [ \
-	"$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == \
-	"healthy" \
+        "$(docker inspect -f "{{.State.Health.Status}}" ${CONTAINER_NAME})" == \
+	    "healthy" \
     ]; do
-	>&2 echo "Postgres is still unavailable - sleeping"
-	sleep 1
+	    >&2 echo "Postgres is still unavailable - sleeping"
+	    sleep 1
     done
     
-    # Create the application user
+    # Create the application user (what our rust code will use)
+    # note: might want to remove '-t' is no tty environment.
     CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
     docker exec -it "${CONTAINER_NAME}" psql -U "${SUPERUSER}" -c "${CREATE_QUERY}"
     
