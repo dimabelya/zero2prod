@@ -1,5 +1,4 @@
-use reqwest::Client;
-use sqlx::{Connection, Executor, PgConnection, PgPool, database};
+use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
 use std::net::TcpListener;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
