@@ -1,7 +1,7 @@
 use sqlx::{Connection, Executor, PgConnection, PgPool};
-use uuid::Uuid;
 use std::net::TcpListener;
-use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use uuid::Uuid;
+use zero2prod::configuration::{DatabaseSettings, get_configuration};
 use zero2prod::startup::run;
 
 pub struct TestApp {
@@ -16,14 +16,12 @@ async fn spawn_app() -> TestApp {
     let port = listener.local_addr().unwrap().port();
     let address = format!("http://127.0.0.1:{}", port);
 
-    let mut configuration = get_configuration()
-        .expect("Failed to read configuration.");
+    let mut configuration = get_configuration().expect("Failed to read configuration.");
     configuration.database.database_name = Uuid::new_v4().to_string();
-    
+
     let connection_pool = configure_database(&configuration.database).await;
 
-    let server = run(listener, connection_pool.clone())
-        .expect("Failed to bind address.");
+    let server = run(listener, connection_pool.clone()).expect("Failed to bind address.");
     let _ = tokio::spawn(server);
 
     TestApp {
@@ -41,9 +39,7 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
         ..config.clone()
     };
 
-    let mut connection = PgConnection::connect(
-        &maintenance_settings.connection_string()
-    )
+    let mut connection = PgConnection::connect(&maintenance_settings.connection_string())
         .await
         .expect("Failed to connect to Postgres");
     connection
